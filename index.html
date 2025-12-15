@@ -1,0 +1,1507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mark VII Interface - Dual Core</title>
+    <style>
+        :root {
+            --arc-blue: #00f3ff;
+            --hot-rod-red: #890000;
+            --gold-alloy: #ffd700;
+            --glass: rgba(10, 15, 20, 0.85);
+            --border: 1px solid rgba(0, 243, 255, 0.2);
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #020202;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            color: white;
+        }
+
+        /* --- Start Screen --- */
+        #start-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #020202;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.8s ease-in-out;
+            background-image: radial-gradient(circle at center, #1a1a1a 0%, #000 70%);
+        }
+
+        .game-title {
+            font-size: 80px;
+            font-weight: 900;
+            color: var(--arc-blue);
+            text-transform: uppercase;
+            letter-spacing: 15px;
+            text-shadow: 0 0 20px var(--arc-blue), 0 0 60px var(--arc-blue);
+            margin-bottom: 10px;
+            text-align: center;
+            animation: pulse-title 3s infinite alternate;
+        }
+
+        @keyframes pulse-title {
+            0% { text-shadow: 0 0 20px var(--arc-blue), 0 0 60px var(--arc-blue); opacity: 1; }
+            100% { text-shadow: 0 0 10px var(--arc-blue), 0 0 30px var(--arc-blue); opacity: 0.8; }
+        }
+
+        .game-subtitle {
+            color: var(--gold-alloy);
+            font-size: 16px;
+            letter-spacing: 8px;
+            margin-bottom: 60px;
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            border-top: 1px solid var(--gold-alloy);
+            border-bottom: 1px solid var(--gold-alloy);
+            padding: 10px 0;
+        }
+
+        .start-btn {
+            background: transparent;
+            border: 2px solid var(--arc-blue);
+            color: var(--arc-blue);
+            padding: 20px 80px;
+            font-size: 24px;
+            font-family: 'Segoe UI', sans-serif;
+            font-weight: bold;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .start-btn:hover {
+            background: var(--arc-blue);
+            color: #000;
+            box-shadow: 0 0 50px var(--arc-blue);
+            letter-spacing: 8px;
+        }
+
+        /* --- Loader --- */
+        #loader {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s;
+        }
+
+        .hud-ring {
+            width: 60px; height: 60px;
+            border: 4px solid var(--arc-blue);
+            border-top: 4px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            box-shadow: 0 0 20px var(--arc-blue);
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* HUD UI */
+        #ui-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .panel {
+            pointer-events: auto;
+            background: var(--glass);
+            border: var(--border);
+            border-left: 3px solid var(--arc-blue);
+            padding: 20px;
+            width: 280px;
+            border-radius: 4px;
+            backdrop-filter: blur(8px);
+            margin-bottom: 10px;
+            transform: skewX(-5deg); /* Iron Man HUD style */
+        }
+
+        h2 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            letter-spacing: 2px;
+            color: var(--arc-blue);
+            text-transform: uppercase;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 5px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        .stat-val { color: white; font-weight: bold; font-family: monospace; }
+
+        /* Sign Language Terminal */
+        #sign-terminal {
+            font-family: 'Courier New', monospace;
+            color: var(--gold-alloy);
+            height: 40px;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid #333;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            margin-top: 10px;
+            font-size: 18px;
+            text-shadow: 0 0 5px var(--gold-alloy);
+        }
+        
+        #summon-name {
+            color: var(--arc-blue);
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        /* Controls */
+        input[type="color"] {
+            width: 40px; border: none; height: 20px; background: none; cursor: pointer; padding: 0;
+        }
+
+        select {
+            background: rgba(0,0,0,0.5);
+            color: var(--arc-blue);
+            border: 1px solid var(--arc-blue);
+            font-size: 10px;
+            padding: 2px;
+            width: 120px;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100px;
+            height: 4px;
+            background: #333;
+            border-radius: 2px;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            background: var(--arc-blue);
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        
+        button.jarvis-btn {
+            background: transparent;
+            border: 1px solid var(--arc-blue);
+            color: var(--arc-blue);
+            padding: 8px;
+            width: 100%;
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        
+        button.jarvis-btn:hover {
+            background: var(--arc-blue);
+            color: black;
+            box-shadow: 0 0 15px var(--arc-blue);
+        }
+
+        /* FIXED VIDEO STYLE */
+        #video-feed { 
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0; /* Keep it in DOM but invisible */
+            pointer-events: none;
+            z-index: -1;
+        }
+    </style>
+    
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+</head>
+<body>
+
+    <!-- Start Screen -->
+    <div id="start-screen">
+        <div class="game-title">MARK VII</div>
+        <div class="game-subtitle">DUAL INTERFACE SYSTEM</div>
+        <button class="start-btn" onclick="enterSystem()">INITIALIZE</button>
+    </div>
+
+    <!-- Loader -->
+    <div id="loader">
+        <div class="hud-ring"></div>
+        <div style="margin-top: 20px; color: var(--arc-blue); letter-spacing: 2px; font-size: 12px;">CALIBRATING DUAL SENSORS...</div>
+    </div>
+
+    <video id="video-feed" playsinline></video>
+
+    <div id="ui-layer">
+        <div style="display: flex; flex-direction: column;">
+            <div class="panel">
+                <h2>Armor Configuration</h2>
+                <div class="stat-row">
+                    <span>PRIMARY COLOR</span>
+                    <input type="color" id="primary-color" value="#890000">
+                </div>
+                <div class="stat-row">
+                    <span>EMISSIVE CORE</span>
+                    <input type="color" id="core-color" value="#00f3ff">
+                </div>
+                <div class="stat-row">
+                    <span>ACTIVE TARGETS</span>
+                    <span class="stat-val" id="hand-count">0</span>
+                </div>
+                <button class="jarvis-btn" onclick="toggleWireframe()">Toggle Schematic View</button>
+            </div>
+            
+            <div class="panel">
+                <h2>Summoning Protocol</h2>
+                <div class="stat-row">
+                    <span>STATUS</span>
+                    <span class="stat-val" id="summon-status" style="color: #666;">STANDBY</span>
+                </div>
+                <div class="stat-row">
+                    <span>LOCK MODE</span>
+                    <span class="stat-val" id="persist-status" style="color: #666;">OFF</span>
+                </div>
+                <div class="stat-row">
+                    <span>ARTIFACT</span>
+                    <span id="summon-name">HEART KERNEL</span>
+                </div>
+                <div style="font-size: 10px; color: #666; margin-top: 8px;">
+                    GESTURES:<br>
+                    • THUMB + INDEX: CYCLE SYMBOL<br>
+                    • THUMB + MIDDLE: TOGGLE MODE<br>
+                    • THUMB + PINKY: SOLO LOCK (HIDE HANDS)<br>
+                    • TWO HANDS: RESIZE OBJECT
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>Artifact Control</h2>
+                <div class="stat-row">
+                    <span>SELECT</span>
+                    <select id="artifact-select"></select>
+                </div>
+                <div class="stat-row">
+                    <span>CHROMA SHIFT</span>
+                    <input type="color" id="artifact-color" value="#00f3ff">
+                </div>
+                <div class="stat-row">
+                    <span>SPIN RATE</span>
+                    <input type="range" id="artifact-speed" min="0" max="100" value="20">
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>Analysis Protocol</h2>
+                <div style="font-size: 10px; color: #666; margin-bottom: 5px;">DETECTED STATE:</div>
+                <div id="sign-terminal">WAITING...</div>
+                <div style="font-size: 10px; color: var(--arc-blue); margin-top: 5px;">CONFIDENCE: <span id="conf-val">0.0%</span></div>
+            </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; align-items: flex-end;">
+            <div class="panel">
+                <h2>Suit Telemetry</h2>
+                <div class="stat-row">
+                    <span>L. REPULSOR</span>
+                    <span class="stat-val" id="tension-val-l">0%</span>
+                </div>
+                <div style="width: 100%; height: 2px; background: #333; margin-bottom: 10px;">
+                    <div id="charge-bar-l" style="width: 0%; height: 100%; background: var(--arc-blue); box-shadow: 0 0 10px var(--arc-blue);"></div>
+                </div>
+                <div class="stat-row">
+                    <span>R. REPULSOR</span>
+                    <span class="stat-val" id="tension-val-r">0%</span>
+                </div>
+                <div style="width: 100%; height: 2px; background: #333; margin-bottom: 10px;">
+                    <div id="charge-bar-r" style="width: 0%; height: 100%; background: var(--arc-blue); box-shadow: 0 0 10px var(--arc-blue);"></div>
+                </div>
+                <div class="stat-row">
+                    <span>SYSTEM STATUS</span>
+                    <span class="stat-val" style="color: #0f0;">ONLINE</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+        // --- Configuration ---
+        const config = {
+            primaryColor: 0x890000, // Iron Man Red
+            secondaryColor: 0xffd700, // Gold
+            coreColor: 0x00f3ff,    // Arc Blue
+            bloomStrength: 1.5,
+            bloomRadius: 0.4,
+            bloomThreshold: 0
+        };
+
+        // --- Scene Setup ---
+        const scene = new THREE.Scene();
+        // Dark metallic background
+        scene.fog = new THREE.FogExp2(0x050505, 0.02);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 0, 15);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.toneMapping = THREE.ReinhardToneMapping;
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        // --- Post Processing (For NEON GLOW) ---
+        const renderScene = new RenderPass(scene, camera);
+        
+        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+        bloomPass.threshold = config.bloomThreshold;
+        bloomPass.strength = config.bloomStrength;
+        bloomPass.radius = config.bloomRadius;
+
+        const composer = new EffectComposer(renderer);
+        composer.addPass(renderScene);
+        composer.addPass(bloomPass);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+
+        // --- Lighting ---
+        const ambientLight = new THREE.AmbientLight(0x404040, 2);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 2);
+        dirLight.position.set(5, 10, 7);
+        scene.add(dirLight);
+        
+        // --- Shared Materials ---
+        const armorMat = new THREE.MeshStandardMaterial({
+            color: config.primaryColor,
+            metalness: 0.8,
+            roughness: 0.2,
+        });
+
+        const goldMat = new THREE.MeshStandardMaterial({
+            color: config.secondaryColor,
+            metalness: 1.0,
+            roughness: 0.1,
+        });
+
+        const coreMat = new THREE.MeshStandardMaterial({
+            color: config.coreColor,
+            emissive: config.coreColor,
+            emissiveIntensity: 2.0
+        });
+
+        const connections = [
+            [0,1], [1,2], [2,3], [3,4],         // Thumb
+            [0,5], [5,6], [6,7], [7,8],         // Index
+            [0,9], [9,10], [10,11], [11,12],    // Middle
+            [0,13], [13,14], [14,15], [15,16],  // Ring
+            [0,17], [17,18], [18,19], [19,20],  // Pinky
+            [5,9], [9,13], [13,17]              // Palm webbing
+        ];
+
+        // --- Symbol Manager (Summoning Logic) ---
+        class SymbolManager {
+            constructor(scene) {
+                this.group = new THREE.Group();
+                scene.add(this.group);
+                this.symbols = [];
+                this.names = [];
+                this.currentIndex = 0;
+                this.active = false;
+                this.soloMode = false; // NEW: Solo/Lock flag
+                this.lastValidPosition = new THREE.Vector3(0, 0, 0); // NEW: Position memory
+                this.rotationSpeed = 0.02;
+                this.currentScale = 1.0; 
+
+                this.initSymbols();
+                this.initUI();
+                this.updateVisibility();
+            }
+
+            initSymbols() {
+                // 1. Heart Kernel (Existing)
+                const heartShape = new THREE.Shape();
+                const x = 0, y = 0;
+                heartShape.moveTo( x + .5, y + .5 );
+                heartShape.bezierCurveTo( x + .5, y + .5, x + .4, y, x, y );
+                heartShape.bezierCurveTo( x - .6, y, x - .6, y + .7,x - .6, y + .7 );
+                heartShape.bezierCurveTo( x - .6, y + 1.1, x - .3, y + 1.54, x + .5, y + 1.9 );
+                heartShape.bezierCurveTo( x + 1.2, y + 1.54, x + 1.6, y + 1.1, x + 1.6, y + .7 );
+                heartShape.bezierCurveTo( x + 1.6, y + .7, x + 1.6, y, x + 1.0, y );
+                heartShape.bezierCurveTo( x + .7, y, x + .5, y + .5, x + .5, y + .5 );
+                const heartGeo = new THREE.ExtrudeGeometry( heartShape, { depth: 0.4, bevelEnabled: true, bevelSegments: 2, steps: 2, bevelSize: 0.1, bevelThickness: 0.1 } );
+                heartGeo.center();
+                const heartMat = new THREE.MeshStandardMaterial({ color: 0xff0000, roughness: 0.1, metalness: 0.5, emissive: 0xaa0000, emissiveIntensity: 0.5 });
+                const heart = new THREE.Mesh(heartGeo, heartMat);
+                heart.rotation.z = Math.PI; 
+                this.addSymbol(heart, "HEART KERNEL");
+
+                // 2. Dragon Ball (Modified)
+                const dbGroup = new THREE.Group();
+                const orb = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 32), new THREE.MeshPhysicalMaterial({ color: 0xff8800, roughness: 0, transmission: 0.4, opacity: 0.9, transparent: true, emissive: 0xff4400, emissiveIntensity: 0.5 }));
+                dbGroup.add(orb);
+                for(let i=0; i<4; i++) {
+                    const star = new THREE.Mesh(new THREE.TetrahedronGeometry(0.25), new THREE.MeshBasicMaterial({color: 0xaa0000}));
+                    // Position 4 stars somewhat centrally
+                    const angle = i * Math.PI/2;
+                    star.position.set(Math.cos(angle)*0.4, Math.sin(angle)*0.4, 0.6);
+                    star.lookAt(0,0,0);
+                    dbGroup.add(star);
+                }
+                this.addSymbol(dbGroup, "DRAGON ORB 4-STAR");
+
+                // 3. Super Saiyan Aura (New)
+                const auraGroup = new THREE.Group();
+                const auraCore = new THREE.Mesh(new THREE.SphereGeometry(0.8, 16, 16), new THREE.MeshBasicMaterial({color: 0xffff00, transparent: true, opacity: 0.5}));
+                const auraShell = new THREE.Mesh(new THREE.IcosahedronGeometry(1.2, 1), new THREE.MeshBasicMaterial({color: 0xffdd00, wireframe: true, transparent: true, opacity: 0.3}));
+                auraGroup.add(auraCore, auraShell);
+                // Particles
+                for(let i=0; i<20; i++) {
+                    const p = new THREE.Mesh(new THREE.TetrahedronGeometry(0.1), new THREE.MeshBasicMaterial({color: 0xffffaa}));
+                    p.position.set((Math.random()-0.5)*2, (Math.random()-0.5)*2, (Math.random()-0.5)*2);
+                    auraGroup.add(p);
+                }
+                this.addSymbol(auraGroup, "SAIYAN AURA");
+
+                // 4. Omnitrix Dial (New)
+                const omniGroup = new THREE.Group();
+                const base = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 0.2, 32), new THREE.MeshStandardMaterial({color: 0x333333, metalness: 0.8}));
+                base.rotation.x = Math.PI/2;
+                const face = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 0.22, 32), new THREE.MeshBasicMaterial({color: 0x00ff00}));
+                face.rotation.x = Math.PI/2;
+                // Hourglass
+                const hg1 = new THREE.Mesh(new THREE.ConeGeometry(0.6, 0.8, 3), new THREE.MeshBasicMaterial({color: 0x000000}));
+                hg1.position.z = 0.12;
+                hg1.rotation.y = Math.PI/6;
+                const hg2 = new THREE.Mesh(new THREE.ConeGeometry(0.6, 0.8, 3), new THREE.MeshBasicMaterial({color: 0x000000}));
+                hg2.position.z = 0.12;
+                hg2.rotation.z = Math.PI;
+                hg2.rotation.y = Math.PI/6;
+                omniGroup.add(base, face, hg1, hg2);
+                this.addSymbol(omniGroup, "OMNITRIX DIAL");
+
+                // 5. Diamond Construct (New)
+                const diamGroup = new THREE.Group();
+                const mainCrystal = new THREE.Mesh(new THREE.CylinderGeometry(0, 0.5, 2, 4), new THREE.MeshPhysicalMaterial({color: 0x00ffff, transmission: 0.6, roughness: 0.1, metalness: 0.1}));
+                diamGroup.add(mainCrystal);
+                for(let i=0; i<4; i++) {
+                    const spike = new THREE.Mesh(new THREE.ConeGeometry(0.2, 1.2, 4), new THREE.MeshPhysicalMaterial({color: 0x00ffff, transmission: 0.6}));
+                    spike.position.y = -0.5;
+                    spike.rotation.x = Math.PI/3;
+                    spike.rotation.y = i * Math.PI/2;
+                    diamGroup.add(spike);
+                }
+                this.addSymbol(diamGroup, "DIAMOND CONSTRUCT");
+
+                // 6. Plasma Katana (New)
+                const katanaGroup = new THREE.Group();
+                const hilt = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.6), new THREE.MeshStandardMaterial({color: 0x111111}));
+                const guard = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.05, 0.3), new THREE.MeshStandardMaterial({color: 0xaa8800}));
+                guard.position.y = 0.3;
+                const blade = new THREE.Mesh(new THREE.BoxGeometry(0.05, 2.5, 0.15), new THREE.MeshBasicMaterial({color: 0x00aaff}));
+                blade.position.y = 1.6;
+                // Curve approximation
+                blade.geometry.translate(0.1, 0, 0); // slight offset
+                const edge = new THREE.Mesh(new THREE.BoxGeometry(0.02, 2.5, 0.02), new THREE.MeshBasicMaterial({color: 0xffffff}));
+                edge.position.set(0.03, 1.6, 0.08); // glowing edge
+                katanaGroup.add(hilt, guard, blade, edge);
+                // Orient horizontally for display
+                katanaGroup.rotation.z = Math.PI/4;
+                this.addSymbol(katanaGroup, "PLASMA KATANA");
+
+                // 7. Pyronite Magma (New)
+                const pyroGroup = new THREE.Group();
+                const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(0.8), new THREE.MeshStandardMaterial({color: 0x330000, roughness: 0.9}));
+                const fire = new THREE.Mesh(new THREE.IcosahedronGeometry(0.7), new THREE.MeshBasicMaterial({color: 0xff4400, wireframe: true}));
+                pyroGroup.add(rock, fire);
+                // floating rocks
+                for(let i=0; i<6; i++) {
+                    const r = new THREE.Mesh(new THREE.DodecahedronGeometry(0.2), new THREE.MeshStandardMaterial({color: 0x330000}));
+                    r.position.set(Math.cos(i)*1.2, Math.sin(i)*1.2, 0);
+                    pyroGroup.add(r);
+                }
+                this.addSymbol(pyroGroup, "PYRONITE MAGMA");
+
+                // 8. Quantum Cloud
+                const pGeo = new THREE.BufferGeometry();
+                const pCount = 600;
+                const pPos = new Float32Array(pCount * 3);
+                for(let i=0; i<pCount*3; i++) pPos[i] = (Math.random()-0.5)*2; 
+                pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+                const pMat = new THREE.PointsMaterial({ size: 0.05, color: 0x00ffff, transparent: true, opacity: 0.8 });
+                const pSphere = new THREE.Points(pGeo, pMat);
+                // sphere normalize
+                const posAttr = pSphere.geometry.attributes.position;
+                for(let i=0; i<pCount; i++) {
+                    const vec = new THREE.Vector3(posAttr.getX(i), posAttr.getY(i), posAttr.getZ(i));
+                    vec.normalize().multiplyScalar(1);
+                    posAttr.setXYZ(i, vec.x, vec.y, vec.z);
+                }
+                this.addSymbol(pSphere, "QUANTUM CLOUD");
+
+                // 9. Data Card
+                const card = new THREE.Mesh(new THREE.BoxGeometry(1.4, 2.0, 0.05), new THREE.MeshStandardMaterial({ color: 0x222222, emissive: 0x00ff00, emissiveIntensity: 0.2, roughness: 0.3, metalness: 0.9 }));
+                const border = new THREE.Mesh(new THREE.BoxGeometry(1.5, 2.1, 0.02), new THREE.MeshBasicMaterial({color: 0x00ff00, wireframe: true}));
+                card.add(border);
+                this.addSymbol(card, "DATA CARD");
+
+                // 10. Hollow Purple
+                const voidGroup = new THREE.Group();
+                const vCore = new THREE.Mesh(new THREE.SphereGeometry(0.5, 32, 32), new THREE.MeshBasicMaterial({color: 0xffffff}));
+                const vShell = new THREE.Mesh(new THREE.SphereGeometry(1.0, 32, 32), new THREE.MeshStandardMaterial({color: 0x6600ff, transparent: true, opacity: 0.4, emissive: 0x4400ff, emissiveIntensity: 2.0, side: THREE.DoubleSide}));
+                voidGroup.add(vCore, vShell);
+                this.addSymbol(voidGroup, "HOLLOW PURPLE");
+
+                // 11. Hyper Tesseract
+                const tessGroup = new THREE.Group();
+                const outerBox = new THREE.Mesh(new THREE.BoxGeometry(1.2,1.2,1.2), new THREE.MeshBasicMaterial({color: 0x00ffff, wireframe: true}));
+                const innerBox = new THREE.Mesh(new THREE.BoxGeometry(0.6,0.6,0.6), new THREE.MeshStandardMaterial({color: 0x00ffff, emissive:0x00ffff, emissiveIntensity: 0.5, wireframe: true}));
+                tessGroup.add(outerBox, innerBox);
+                this.addSymbol(tessGroup, "HYPER TESSERACT");
+
+                // 12. Genetic Helix
+                const helixGroup = new THREE.Group();
+                for(let i=0; i<20; i++) {
+                    const y = (i/10) - 1;
+                    const angle = i * 0.5;
+                    const r = 0.5;
+                    const s1 = new THREE.Mesh(new THREE.SphereGeometry(0.08), new THREE.MeshStandardMaterial({color: 0x00ff00, emissive: 0x00ff00}));
+                    s1.position.set(Math.cos(angle)*r, y, Math.sin(angle)*r);
+                    const s2 = new THREE.Mesh(new THREE.SphereGeometry(0.08), new THREE.MeshStandardMaterial({color: 0x0000ff, emissive: 0x0000ff}));
+                    s2.position.set(Math.cos(angle + Math.PI)*r, y, Math.sin(angle + Math.PI)*r);
+                    helixGroup.add(s1, s2);
+                }
+                this.addSymbol(helixGroup, "GENETIC HELIX");
+
+                // 13. Cyber Pyramid
+                const pyGroup = new THREE.Group();
+                const pyGeo = new THREE.TetrahedronGeometry(1);
+                const pyMesh = new THREE.Mesh(pyGeo, new THREE.MeshStandardMaterial({color: 0xaa00ff, metalness: 0.9, roughness: 0.1}));
+                const pyFrame = new THREE.LineSegments(new THREE.EdgesGeometry(pyGeo), new THREE.LineBasicMaterial({color: 0x00ff00}));
+                pyGroup.add(pyMesh, pyFrame);
+                this.addSymbol(pyGroup, "CYBER PYRAMID");
+
+                // 14. Void Saturn
+                const satGroup = new THREE.Group();
+                const planet = new THREE.Mesh(new THREE.SphereGeometry(0.6, 32, 32), new THREE.MeshStandardMaterial({color: 0x333333, emissive: 0x111111, roughness: 0.6, wireframe: true}));
+                const satRing = new THREE.Mesh(new THREE.RingGeometry(0.8, 1.2, 32), new THREE.MeshBasicMaterial({color: 0xffaa00, side: THREE.DoubleSide, transparent: true, opacity: 0.7}));
+                satRing.rotation.x = Math.PI/2.5;
+                satGroup.add(planet, satRing);
+                this.addSymbol(satGroup, "VOID SATURN");
+
+                // 15. Infinity Knot
+                const knotMesh = new THREE.Mesh(new THREE.TorusKnotGeometry(0.6, 0.2, 100, 16), new THREE.MeshStandardMaterial({ color: 0xff0088, emissive: 0x550044, metalness: 0.8, roughness: 0.2 }));
+                this.addSymbol(knotMesh, "INFINITY KNOT");
+
+                // 16. Plasma Shield
+                const shieldMesh = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 0.05, 6), new THREE.MeshBasicMaterial({ color: 0x0088ff, transparent: true, opacity: 0.5, wireframe: false, side: THREE.DoubleSide }));
+                const shieldWire = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.CylinderGeometry(1, 1, 0.05, 6)), new THREE.LineBasicMaterial({color: 0xffffff}));
+                shieldMesh.add(shieldWire);
+                shieldMesh.rotation.x = Math.PI/2;
+                this.addSymbol(shieldMesh, "PLASMA SHIELD");
+
+                // 17. Flux Core
+                const fluxGroup = new THREE.Group();
+                const center = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.5), new THREE.MeshStandardMaterial({color: 0xaaaaaa}));
+                fluxGroup.add(center);
+                for(let i=0; i<3; i++) {
+                    const bar = new THREE.Mesh(new THREE.BoxGeometry(0.2, 1.0, 0.1), new THREE.MeshStandardMaterial({color: 0xffff00, emissive: 0xffaa00}));
+                    bar.position.y = 0.5;
+                    const pivot = new THREE.Group();
+                    pivot.rotation.z = i * (Math.PI * 2 / 3);
+                    const b = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.0, 0.1), new THREE.MeshStandardMaterial({color: 0xffff00, emissive: 0xffaa00}));
+                    b.position.y = 0.5;
+                    pivot.add(b);
+                    fluxGroup.add(pivot);
+                }
+                this.addSymbol(fluxGroup, "FLUX CORE");
+
+                // 18. Dark Matter
+                const dmGroup = new THREE.Group();
+                const dmCore = new THREE.Mesh(new THREE.SphereGeometry(0.7, 32, 32), new THREE.MeshBasicMaterial({color: 0x000000}));
+                const dmWire = new THREE.Mesh(new THREE.IcosahedronGeometry(0.8, 1), new THREE.MeshBasicMaterial({color: 0x550055, wireframe: true}));
+                dmGroup.add(dmCore, dmWire);
+                this.addSymbol(dmGroup, "DARK MATTER");
+
+                // 19. Omega Signal
+                const omegaMesh = new THREE.Mesh(new THREE.TorusGeometry(0.8, 0.1, 16, 100), new THREE.MeshStandardMaterial({color: 0xff0000, emissive: 0xff0000, emissiveIntensity: 2}));
+                const omegaInner = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.05, 16, 50), new THREE.MeshBasicMaterial({color: 0xffffff}));
+                omegaMesh.add(omegaInner);
+                this.addSymbol(omegaMesh, "OMEGA SIGNAL");
+
+                // 20. Neural Node
+                const nodeGroup = new THREE.Group();
+                const nCore = new THREE.Mesh(new THREE.SphereGeometry(0.4), new THREE.MeshStandardMaterial({color: 0x00ff88}));
+                nodeGroup.add(nCore);
+                for(let i=0; i<8; i++) {
+                    const spike = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.5), new THREE.MeshBasicMaterial({color: 0x00ff88}));
+                    spike.rotation.x = Math.random() * Math.PI;
+                    spike.rotation.z = Math.random() * Math.PI;
+                    nodeGroup.add(spike);
+                }
+                this.addSymbol(nodeGroup, "NEURAL NODE");
+
+                // 21. Time Gear
+                const timeGroup = new THREE.Group();
+                const tRing = new THREE.Mesh(new THREE.RingGeometry(0.8, 1.0, 32), new THREE.MeshBasicMaterial({color: 0x00ff00, side: THREE.DoubleSide}));
+                const tHand = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.8, 0.05), new THREE.MeshBasicMaterial({color: 0xffffff}));
+                tHand.position.y = 0.4;
+                timeGroup.add(tRing, tHand);
+                this.addSymbol(timeGroup, "TIME GEAR");
+
+                // 22. Nano Cluster
+                const nanoGroup = new THREE.Group();
+                for(let i=0; i<20; i++) {
+                    const cube = new THREE.Mesh(new THREE.BoxGeometry(0.2,0.2,0.2), new THREE.MeshStandardMaterial({color: 0xaaaaaa, metalness: 1}));
+                    cube.position.set((Math.random()-0.5)*1.5, (Math.random()-0.5)*1.5, (Math.random()-0.5)*1.5);
+                    nanoGroup.add(cube);
+                }
+                this.addSymbol(nanoGroup, "NANO CLUSTER");
+
+                // 23. Void Prism
+                const prismMesh = new THREE.Mesh(new THREE.CylinderGeometry(0, 0.8, 1.5, 3), new THREE.MeshStandardMaterial({color: 0x220022, emissive: 0x440044, roughness: 0.1}));
+                const prismEdges = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.CylinderGeometry(0, 0.8, 1.5, 3)), new THREE.LineBasicMaterial({color: 0xff00ff}));
+                prismMesh.add(prismEdges);
+                this.addSymbol(prismMesh, "VOID PRISM");
+
+                // 24. Sonic Emitter
+                const sonicGroup = new THREE.Group();
+                for(let i=1; i<=4; i++) {
+                    const ring = new THREE.Mesh(new THREE.TorusGeometry(i*0.2, 0.02, 16, 50), new THREE.MeshBasicMaterial({color: 0x0088ff, transparent: true, opacity: 1 - (i*0.2)}));
+                    sonicGroup.add(ring);
+                }
+                this.addSymbol(sonicGroup, "SONIC EMITTER");
+
+                // 25. Celestial Compass
+                const compGroup = new THREE.Group();
+                const cRing1 = new THREE.Mesh(new THREE.TorusGeometry(1, 0.02, 16, 100), new THREE.MeshBasicMaterial({color: 0xffd700}));
+                const cRing2 = new THREE.Mesh(new THREE.TorusGeometry(0.8, 0.02, 16, 100), new THREE.MeshBasicMaterial({color: 0xffd700}));
+                cRing2.rotation.x = Math.PI/2;
+                const needle = new THREE.Mesh(new THREE.ConeGeometry(0.1, 1.5, 4), new THREE.MeshBasicMaterial({color: 0xff0000}));
+                needle.rotation.z = Math.PI/4;
+                compGroup.add(cRing1, cRing2, needle);
+                this.addSymbol(compGroup, "CELESTIAL COMPASS");
+
+                // 26. Cyber Skull
+                const skullGroup = new THREE.Group();
+                const cranium = new THREE.Mesh(new THREE.IcosahedronGeometry(0.7, 1), new THREE.MeshStandardMaterial({color: 0xaaaaaa, flatShading: true}));
+                const jaw = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.4, 0.6), new THREE.MeshStandardMaterial({color: 0x888888}));
+                jaw.position.y = -0.6;
+                skullGroup.add(cranium, jaw);
+                const e1 = new THREE.Mesh(new THREE.SphereGeometry(0.15), new THREE.MeshBasicMaterial({color: 0xff0000}));
+                e1.position.set(0.3, -0.1, 0.6);
+                const e2 = new THREE.Mesh(new THREE.SphereGeometry(0.15), new THREE.MeshBasicMaterial({color: 0xff0000}));
+                e2.position.set(-0.3, -0.1, 0.6);
+                skullGroup.add(e1, e2);
+                this.addSymbol(skullGroup, "CYBER SKULL");
+
+                // 27. Bio Hazard
+                const bioGroup = new THREE.Group();
+                for(let i=0; i<3; i++) {
+                    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.6, 0.15, 16, 32, Math.PI * 1.5), new THREE.MeshBasicMaterial({color: 0xffff00}));
+                    ring.rotation.z = (i * Math.PI * 2 / 3) + Math.PI/6;
+                    ring.position.set(Math.cos(i * Math.PI * 2 / 3)*0.4, Math.sin(i * Math.PI * 2 / 3)*0.4, 0);
+                    bioGroup.add(ring);
+                }
+                const bioCore = new THREE.Mesh(new THREE.CircleGeometry(0.3, 32), new THREE.MeshBasicMaterial({color: 0xffff00}));
+                bioGroup.add(bioCore);
+                this.addSymbol(bioGroup, "BIO HAZARD");
+
+                // 28. Radioactive
+                const radGroup = new THREE.Group();
+                const rCore = new THREE.Mesh(new THREE.SphereGeometry(0.5, 32, 32), new THREE.MeshStandardMaterial({color: 0x00ff00, emissive: 0x00ff00, emissiveIntensity: 2}));
+                radGroup.add(rCore);
+                const r1 = new THREE.Mesh(new THREE.TorusGeometry(1.0, 0.05, 8, 50), new THREE.MeshBasicMaterial({color: 0x444444}));
+                const r2 = new THREE.Mesh(new THREE.TorusGeometry(1.0, 0.05, 8, 50), new THREE.MeshBasicMaterial({color: 0x444444}));
+                const r3 = new THREE.Mesh(new THREE.TorusGeometry(1.0, 0.05, 8, 50), new THREE.MeshBasicMaterial({color: 0x444444}));
+                r1.rotation.x = Math.PI/2;
+                r2.rotation.y = Math.PI/2;
+                radGroup.add(r1, r2, r3);
+                this.addSymbol(radGroup, "RADIOACTIVE");
+
+                // 29. Matrix Code
+                const rainGroup = new THREE.Group();
+                for(let i=0; i<15; i++) {
+                    const strip = new THREE.Mesh(new THREE.BoxGeometry(0.05, 2.0, 0.05), new THREE.MeshBasicMaterial({color: 0x00ff00, transparent: true, opacity: 0.6}));
+                    strip.position.set((Math.random()-0.5)*1.5, (Math.random()-0.5)*0.5, (Math.random()-0.5)*1.5);
+                    rainGroup.add(strip);
+                }
+                this.addSymbol(rainGroup, "MATRIX CODE");
+
+                // 30. Stargate
+                const sgGroup = new THREE.Group();
+                const sgRing = new THREE.Mesh(new THREE.TorusGeometry(1.2, 0.15, 16, 50), new THREE.MeshStandardMaterial({color: 0x666666, metalness: 0.8}));
+                const eventHorizon = new THREE.Mesh(new THREE.CircleGeometry(1.0, 32), new THREE.MeshBasicMaterial({color: 0x00aaff, transparent: true, opacity: 0.7}));
+                sgGroup.add(sgRing, eventHorizon);
+                // Chevrons
+                for(let i=0; i<7; i++) {
+                    const chev = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.2, 0.2), new THREE.MeshBasicMaterial({color: 0xff4400}));
+                    const angle = i * (Math.PI * 2 / 7);
+                    chev.position.set(Math.cos(angle)*1.2, Math.sin(angle)*1.2, 0.1);
+                    chev.rotation.z = angle;
+                    sgGroup.add(chev);
+                }
+                this.addSymbol(sgGroup, "STARGATE");
+
+                // 31. Viral Strain
+                const virusGroup = new THREE.Group();
+                const vBody = new THREE.Mesh(new THREE.IcosahedronGeometry(0.8, 1), new THREE.MeshStandardMaterial({color: 0xff00ff, roughness: 0.5}));
+                virusGroup.add(vBody);
+                // Spikes
+                for(let i=0; i<12; i++) {
+                    const spike = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.4), new THREE.MeshBasicMaterial({color: 0xcccccc}));
+                    spike.position.set((Math.random()-0.5)*1.2, (Math.random()-0.5)*1.2, (Math.random()-0.5)*1.2).normalize().multiplyScalar(1.0);
+                    spike.lookAt(vBody.position);
+                    virusGroup.add(spike);
+                }
+                this.addSymbol(virusGroup, "VIRAL STRAIN");
+
+                // 32. Atom Model
+                const atomGroup = new THREE.Group();
+                const nucleus = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16), new THREE.MeshStandardMaterial({color: 0xff3300}));
+                atomGroup.add(nucleus);
+                const orbitMat = new THREE.LineBasicMaterial({color: 0x00ccff});
+                for(let i=0; i<3; i++) {
+                    const orbit = new THREE.Line(new THREE.BufferGeometry().setFromPoints(new THREE.EllipseCurve(0,0,1,1,0,2*Math.PI,false,0).getPoints(50)), orbitMat);
+                    orbit.rotation.x = Math.PI/2;
+                    orbit.rotation.y = i * Math.PI/3;
+                    atomGroup.add(orbit);
+                    const electron = new THREE.Mesh(new THREE.SphereGeometry(0.1), new THREE.MeshBasicMaterial({color: 0x00ccff}));
+                    electron.position.set(Math.cos(i)*1, Math.sin(i)*0.2, Math.sin(i)*1); 
+                    atomGroup.add(electron);
+                }
+                this.addSymbol(atomGroup, "ATOM MODEL");
+
+                // 33. Monolith
+                const monoMesh = new THREE.Mesh(new THREE.BoxGeometry(0.6, 2.5, 0.2), new THREE.MeshStandardMaterial({color: 0x111111, roughness: 0.0, metalness: 0.9}));
+                this.addSymbol(monoMesh, "OBSIDIAN MONOLITH");
+
+                // 34. Spirit Bomb (New)
+                const spiritGroup = new THREE.Group();
+                const sbCore = new THREE.Mesh(new THREE.SphereGeometry(1.2, 32, 32), new THREE.MeshBasicMaterial({color: 0x00aaff, transparent: true, opacity: 0.8}));
+                spiritGroup.add(sbCore);
+                // Orbiting energy
+                for(let i=0; i<30; i++) {
+                    const p = new THREE.Mesh(new THREE.SphereGeometry(0.05), new THREE.MeshBasicMaterial({color: 0xffffff}));
+                    p.position.set((Math.random()-0.5)*3, (Math.random()-0.5)*3, (Math.random()-0.5)*3);
+                    spiritGroup.add(p);
+                }
+                this.addSymbol(spiritGroup, "SPIRIT BOMB");
+
+                // 35. Portal Loop
+                const portalGroup = new THREE.Group();
+                const p1 = new THREE.Mesh(new THREE.TorusGeometry(1.0, 0.1, 16, 50), new THREE.MeshBasicMaterial({color: 0xff8800}));
+                p1.position.x = -0.5;
+                const p2 = new THREE.Mesh(new THREE.TorusGeometry(1.0, 0.1, 16, 50), new THREE.MeshBasicMaterial({color: 0x0088ff}));
+                p2.position.x = 0.5;
+                p2.rotation.y = Math.PI/4;
+                portalGroup.add(p1, p2);
+                this.addSymbol(portalGroup, "PORTAL LOOP");
+
+                // 36. Gravity Well
+                const gravGroup = new THREE.Group();
+                const funnel = new THREE.Mesh(new THREE.ConeGeometry(1.2, 1.5, 32, 1, true), new THREE.MeshBasicMaterial({color: 0xaa00aa, wireframe: true, side: THREE.DoubleSide}));
+                gravGroup.add(funnel);
+                const singularity = new THREE.Mesh(new THREE.SphereGeometry(0.2), new THREE.MeshBasicMaterial({color: 0x000000}));
+                singularity.position.y = 0.75;
+                gravGroup.add(singularity);
+                this.addSymbol(gravGroup, "GRAVITY WELL");
+
+                // 37. Logic Board
+                const circGroup = new THREE.Group();
+                const board = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.MeshBasicMaterial({color: 0x004400, side: THREE.DoubleSide}));
+                circGroup.add(board);
+                for(let i=0; i<10; i++) {
+                    const trace = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.4, 0.02), new THREE.MeshBasicMaterial({color: 0xccff00}));
+                    trace.position.set((Math.random()-0.5)*1.8, (Math.random()-0.5)*1.8, 0.02);
+                    circGroup.add(trace);
+                }
+                this.addSymbol(circGroup, "LOGIC BOARD");
+
+                // 38. Ice Shard
+                const iceGroup = new THREE.Group();
+                for(let i=0; i<5; i++) {
+                    const shard = new THREE.Mesh(new THREE.ConeGeometry(0.2, 1.5, 3), new THREE.MeshPhysicalMaterial({color: 0xaaddff, transmission: 0.8, roughness: 0.1}));
+                    shard.position.set((Math.random()-0.5)*0.5, (Math.random()-0.5)*0.5, (Math.random()-0.5)*0.5);
+                    shard.rotation.set(Math.random(), Math.random(), Math.random());
+                    iceGroup.add(shard);
+                }
+                this.addSymbol(iceGroup, "ICE SHARD");
+
+                // 39. Solar Core
+                const solarGroup = new THREE.Group();
+                const sun = new THREE.Mesh(new THREE.SphereGeometry(0.8, 32, 32), new THREE.MeshBasicMaterial({color: 0xffaa00}));
+                const flares = new THREE.Mesh(new THREE.IcosahedronGeometry(0.9, 2), new THREE.MeshBasicMaterial({color: 0xff4400, wireframe: true, transparent: true, opacity: 0.5}));
+                solarGroup.add(sun, flares);
+                this.addSymbol(solarGroup, "SOLAR CORE");
+
+                // 40. Drone Scout
+                const droneGroup = new THREE.Group();
+                const dBody = new THREE.Mesh(new THREE.SphereGeometry(0.3), new THREE.MeshStandardMaterial({color: 0x333333}));
+                droneGroup.add(dBody);
+                for(let i=0; i<4; i++) {
+                    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.05, 0.05), new THREE.MeshStandardMaterial({color: 0x555555}));
+                    arm.rotation.z = i * Math.PI/2;
+                    const rotor = new THREE.Mesh(new THREE.TorusGeometry(0.15, 0.02, 8, 16), new THREE.MeshBasicMaterial({color: 0x00ff00}));
+                    rotor.position.set(Math.cos(i*Math.PI/2)*0.4, Math.sin(i*Math.PI/2)*0.4, 0.05);
+                    droneGroup.add(arm, rotor);
+                }
+                this.addSymbol(droneGroup, "DRONE SCOUT");
+
+                // 41. Fusion Cell
+                const fuseGroup = new THREE.Group();
+                const fCyl = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 1.2, 16), new THREE.MeshStandardMaterial({color: 0x222222}));
+                const fCore = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.8, 16), new THREE.MeshBasicMaterial({color: 0x00ffff}));
+                // Z-fighting fix: scale core slightly X/Z
+                fCore.scale.set(1.05, 1, 1.05);
+                const cap1 = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.2, 16), new THREE.MeshStandardMaterial({color: 0x888888}));
+                cap1.position.y = 0.6;
+                const cap2 = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.2, 16), new THREE.MeshStandardMaterial({color: 0x888888}));
+                cap2.position.y = -0.6;
+                fuseGroup.add(fCyl, fCore, cap1, cap2);
+                this.addSymbol(fuseGroup, "FUSION CELL");
+
+                // 42. Holocron
+                const holoGroup = new THREE.Group();
+                const hCube = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.8), new THREE.MeshBasicMaterial({color: 0x00aaff, transparent: true, opacity: 0.6}));
+                const hFrame = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(0.8, 0.8, 0.8)), new THREE.LineBasicMaterial({color: 0xffd700}));
+                holoGroup.add(hCube, hFrame);
+                holoGroup.rotation.x = Math.PI/4;
+                holoGroup.rotation.z = Math.PI/4;
+                this.addSymbol(holoGroup, "HOLOCRON");
+
+                // 43. Arcane Ward
+                const wardGroup = new THREE.Group();
+                const wRing = new THREE.Mesh(new THREE.RingGeometry(0.8, 1.0, 32), new THREE.MeshBasicMaterial({color: 0xaa00ff, side: THREE.DoubleSide}));
+                const wSquare = new THREE.Mesh(new THREE.RingGeometry(0.7, 0.75, 4), new THREE.MeshBasicMaterial({color: 0xaa00ff, side: THREE.DoubleSide}));
+                wardGroup.add(wRing, wSquare);
+                this.addSymbol(wardGroup, "ARCANE WARD");
+
+                // 44. Tesla Tower
+                const teslaGroup = new THREE.Group();
+                const tBase = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.2, 1.5), new THREE.MeshStandardMaterial({color: 0x555555}));
+                const tTop = new THREE.Mesh(new THREE.TorusGeometry(0.4, 0.1, 8, 16), new THREE.MeshStandardMaterial({color: 0x888888}));
+                tTop.position.y = 0.75;
+                tTop.rotation.x = Math.PI/2;
+                teslaGroup.add(tBase, tTop);
+                this.addSymbol(teslaGroup, "TESLA TOWER");
+
+                // 45. Bio Capsule
+                const bioCapGroup = new THREE.Group();
+                const bGlass = new THREE.Mesh(new THREE.CapsuleGeometry(0.4, 1, 4, 8), new THREE.MeshPhysicalMaterial({color: 0x00ff00, transmission: 0.5, opacity: 0.6}));
+                const bHelix = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.8), new THREE.MeshBasicMaterial({color: 0x004400, wireframe: true}));
+                bioCapGroup.add(bGlass, bHelix);
+                this.addSymbol(bioCapGroup, "BIO CAPSULE");
+
+                // 46. Nebula Cloud
+                const nebGroup = new THREE.Group();
+                const nGeo = new THREE.BufferGeometry();
+                const nCount = 400;
+                const nPos = new Float32Array(nCount*3);
+                const nCol = new Float32Array(nCount*3);
+                for(let i=0; i<nCount; i++) {
+                    nPos[i*3] = (Math.random()-0.5)*2;
+                    nPos[i*3+1] = (Math.random()-0.5)*2;
+                    nPos[i*3+2] = (Math.random()-0.5)*2;
+                    nCol[i*3] = Math.random(); // R
+                    nCol[i*3+1] = 0; // G
+                    nCol[i*3+2] = Math.random(); // B
+                }
+                nGeo.setAttribute('position', new THREE.BufferAttribute(nPos, 3));
+                nGeo.setAttribute('color', new THREE.BufferAttribute(nCol, 3));
+                const nMat = new THREE.PointsMaterial({size: 0.05, vertexColors: true});
+                nebGroup.add(new THREE.Points(nGeo, nMat));
+                this.addSymbol(nebGroup, "NEBULA CLOUD");
+
+                // 47. Tactical Nuke
+                const nukeGroup = new THREE.Group();
+                const nBody = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 1.2), new THREE.MeshStandardMaterial({color: 0x334433}));
+                const nNose = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.4), new THREE.MeshStandardMaterial({color: 0xaa0000}));
+                nNose.position.y = 0.8;
+                const nFins = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.1, 0.05), new THREE.MeshStandardMaterial({color: 0x333333}));
+                nFins.position.y = -0.5;
+                const nFins2 = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.1, 0.8), new THREE.MeshStandardMaterial({color: 0x333333}));
+                nFins2.position.y = -0.5;
+                nukeGroup.add(nBody, nNose, nFins, nFins2);
+                // Rotate to fly horizontal
+                nukeGroup.rotation.z = -Math.PI/2;
+                this.addSymbol(nukeGroup, "TACTICAL NUKE");
+
+                // 48. Void Eye
+                const eyeGroup = new THREE.Group();
+                const eyeball = new THREE.Mesh(new THREE.SphereGeometry(0.6, 32, 32), new THREE.MeshStandardMaterial({color: 0x110000}));
+                const pupil = new THREE.Mesh(new THREE.CapsuleGeometry(0.1, 0.4, 4, 8), new THREE.MeshBasicMaterial({color: 0xff0000}));
+                pupil.position.z = 0.5;
+                eyeGroup.add(eyeball, pupil);
+                this.addSymbol(eyeGroup, "VOID EYE");
+
+                // 49. Chrono Glass
+                const chronoGroup = new THREE.Group();
+                const glassTop = new THREE.Mesh(new THREE.ConeGeometry(0.5, 0.6, 16, 1, true), new THREE.MeshPhysicalMaterial({color: 0xaaccff, transmission: 0.6}));
+                glassTop.position.y = 0.3;
+                glassTop.rotation.x = Math.PI;
+                const glassBot = new THREE.Mesh(new THREE.ConeGeometry(0.5, 0.6, 16, 1, true), new THREE.MeshPhysicalMaterial({color: 0xaaccff, transmission: 0.6}));
+                glassBot.position.y = -0.3;
+                const sand = new THREE.Mesh(new THREE.ConeGeometry(0.4, 0.4), new THREE.MeshBasicMaterial({color: 0xc2b280}));
+                sand.position.y = -0.3;
+                chronoGroup.add(glassTop, glassBot, sand);
+                this.addSymbol(chronoGroup, "CHRONO GLASS");
+
+                // 50. Victory Cup
+                const cupGroup = new THREE.Group();
+                const cupBody = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.3, 0.8, 16, 1, true), new THREE.MeshStandardMaterial({color: 0xffd700, metalness: 1, roughness: 0.3, side: THREE.DoubleSide}));
+                const cupBase = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 0.1), new THREE.MeshStandardMaterial({color: 0xffd700}));
+                cupBase.position.y = -0.45;
+                cupGroup.add(cupBody, cupBase);
+                this.addSymbol(cupGroup, "VICTORY CUP");
+            }
+
+            addSymbol(mesh, name) {
+                this.group.add(mesh);
+                mesh.visible = false;
+                this.symbols.push(mesh);
+                this.names.push(name);
+            }
+
+            initUI() {
+                const select = document.getElementById('artifact-select');
+                this.names.forEach((name, index) => {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.text = name;
+                    select.appendChild(option);
+                });
+
+                select.addEventListener('change', (e) => {
+                    this.setSymbol(parseInt(e.target.value));
+                });
+
+                document.getElementById('artifact-color').addEventListener('input', (e) => {
+                    this.setColor(e.target.value);
+                });
+
+                document.getElementById('artifact-speed').addEventListener('input', (e) => {
+                    this.rotationSpeed = e.target.value * 0.001;
+                });
+            }
+
+            setSymbol(index) {
+                this.symbols[this.currentIndex].visible = false;
+                this.currentIndex = index;
+                this.updateVisibility();
+                
+                // Update UI Text
+                updateSummoningUI(this.names[this.currentIndex], this.active);
+                
+                // Sync Dropdown
+                document.getElementById('artifact-select').value = index;
+            }
+
+            cycleSymbol() {
+                const nextIndex = (this.currentIndex + 1) % this.symbols.length;
+                this.setSymbol(nextIndex);
+                return this.names[this.currentIndex];
+            }
+
+            setColor(hex) {
+                const activeGroup = this.symbols[this.currentIndex];
+                const color = new THREE.Color(hex);
+                
+                activeGroup.traverse((child) => {
+                    if (child.isMesh || child.isLineSegments || child.isPoints) {
+                        if (child.material) {
+                            if (child.material.color) child.material.color.copy(color);
+                            if (child.material.emissive) child.material.emissive.copy(color);
+                        }
+                    }
+                });
+            }
+
+            toggleMode() {
+                this.active = !this.active;
+                this.updateVisibility();
+                return this.active;
+            }
+
+            toggleSoloMode() {
+                this.soloMode = !this.soloMode;
+                const statusEl = document.getElementById('persist-status');
+                statusEl.innerText = this.soloMode ? "SOLO LOCK" : "OFF";
+                statusEl.style.color = this.soloMode ? "#ffd700" : "#666";
+                
+                // If locking, save current position as valid if hands are present
+                // We'll let the update loop handle the position fix logic
+                return this.soloMode;
+            }
+
+            updateVisibility() {
+                if (this.active) {
+                    this.symbols[this.currentIndex].visible = true;
+                } else {
+                    this.symbols.forEach(s => s.visible = false);
+                }
+            }
+
+            // Updated update method: accepts optional distance. 
+            // If distance is provided (2 hands), use dynamic scale.
+            // If distance is null (1 hand), use fixed medium-large scale.
+            update(center, distance = null) {
+                if (!this.active) return;
+                
+                const currentMesh = this.symbols[this.currentIndex];
+                const currentName = this.names[this.currentIndex];
+                currentMesh.position.copy(center);
+                
+                // Scale Logic
+                let scale = 2.5; // Default "Medium Level Large" for single hand
+
+                if (distance !== null) {
+                    // Two hands detected: Dynamic sizing
+                    scale = distance * 0.4;
+                    if (scale < 0.1) scale = 0.1;
+                }
+                
+                // Apply scale
+                currentMesh.scale.setScalar(scale);
+                
+                // ROTATION LOGIC: Y-AXIS ONLY (World/Local vertical)
+                // We reset X/Z to ensure stability and only spin Y.
+                // NOTE: Some objects (like Heart) were rotated in init to face front.
+                // We should add to Y, not overwrite if we want to preserve initial orientation, 
+                // but "rotate on y axis only" implies a spin.
+                // For most objects, rotation.y is the spin.
+                
+                // For static heart, we usually don't spin. But user asked to spin everything Y.
+                currentMesh.rotation.y += this.rotationSpeed;
+                
+                // Ensure other axes don't drift if they were not set static
+                // However, Heart was set to rotation.z = PI in init. We must NOT reset Z for Heart.
+                // For Plasma Shield (rotation.x = PI/2), we must NOT reset X.
+                // Best way: Just add to Y.
+                
+                // Special internal animations
+                if (currentName === "HOLLOW PURPLE") {
+                   currentMesh.children[1].rotation.x += 0.1;
+                }
+            }
+        }
+
+        // --- Gauntlet Factory ---
+        class Gauntlet {
+            constructor(scene) {
+                this.group = new THREE.Group();
+                scene.add(this.group);
+                this.landmarksMeshes = [];
+                this.boneMeshes = [];
+                this.palmPosition = new THREE.Vector3();
+                this.palmNormal = new THREE.Vector3(0, 0, 1);
+                
+                // 1. Create Joint Spheres
+                const jointGeo = new THREE.OctahedronGeometry(0.6, 1);
+                for (let i = 0; i < 21; i++) {
+                    const mat = (i === 0 || i === 9) ? coreMat : goldMat;
+                    const mesh = new THREE.Mesh(jointGeo, mat);
+                    mesh.visible = false;
+                    this.group.add(mesh);
+                    this.landmarksMeshes.push(mesh);
+                }
+
+                // 2. Create Bone Cylinders
+                const boneGeo = new THREE.CylinderGeometry(0.5, 0.4, 1, 8);
+                boneGeo.rotateX(Math.PI / 2);
+                
+                for (let i = 0; i < connections.length; i++) {
+                    const mesh = new THREE.Mesh(boneGeo, armorMat);
+                    mesh.visible = false;
+                    this.group.add(mesh);
+                    this.boneMeshes.push({
+                        mesh: mesh,
+                        indices: connections[i]
+                    });
+                }
+
+                // 3. Palm Arc Reactor
+                const arcGeo = new THREE.TorusGeometry(1.5, 0.2, 8, 32);
+                this.arcMesh = new THREE.Mesh(arcGeo, coreMat);
+                this.arcMesh.visible = false;
+                this.group.add(this.arcMesh);
+
+                // 4. Dynamic Repulsor Light (Independent per hand)
+                this.repulsorLight = new THREE.PointLight(config.coreColor, 0, 100);
+                scene.add(this.repulsorLight); 
+
+                this.visible = false;
+            }
+
+            setVisible(visible) {
+                this.visible = visible;
+                this.group.visible = visible;
+                this.repulsorLight.visible = visible;
+            }
+
+            update(landmarks) {
+                const vectors = [];
+                
+                // 1. Update Joints
+                for(let i=0; i<21; i++) {
+                    const lm = landmarks[i];
+                    const x = (lm.x - 0.5) * -30; 
+                    const y = (lm.y - 0.5) * -20;
+                    const z = lm.z * -25;
+                    const v = new THREE.Vector3(x, y, z);
+                    vectors.push(v);
+                    
+                    this.landmarksMeshes[i].position.copy(v);
+                    this.landmarksMeshes[i].visible = true;
+                }
+
+                // 2. Update Bones
+                this.boneMeshes.forEach(bone => {
+                    const start = vectors[bone.indices[0]];
+                    const end = vectors[bone.indices[1]];
+                    bone.mesh.position.copy(start).add(end).multiplyScalar(0.5);
+                    bone.mesh.lookAt(end);
+                    const dist = start.distanceTo(end);
+                    bone.mesh.scale.set(1, 1, dist);
+                    bone.mesh.visible = true;
+                });
+
+                // 3. Update Palm Arc & Light
+                // Calculate geometric center of palm (Wrist 0, Index 5, Pinky 17)
+                const palmCenter = new THREE.Vector3().copy(vectors[0]).add(vectors[5]).add(vectors[17]).divideScalar(3);
+                this.palmPosition.copy(palmCenter); // Store for external use
+
+                // Calculate Palm Normal
+                // Vector Index->Wrist
+                const v1 = new THREE.Vector3().subVectors(vectors[5], vectors[0]);
+                // Vector Pinky->Wrist
+                const v2 = new THREE.Vector3().subVectors(vectors[17], vectors[0]);
+                // Cross Product yields normal. Order depends on coordinate system, but usually Right Hand Rule.
+                // If palm faces camera, Index is right (if right hand), Pinky left. 
+                // Let's normalize it.
+                this.palmNormal.crossVectors(v1, v2).normalize();
+                
+                this.arcMesh.position.copy(palmCenter);
+                this.arcMesh.lookAt(camera.position); 
+                
+                this.repulsorLight.position.copy(palmCenter);
+                this.repulsorLight.position.z += 2;
+
+                this.arcMesh.rotation.z += 0.05;
+
+                return vectors;
+            }
+        }
+
+        // Initialize Components
+        const gauntlets = [new Gauntlet(scene), new Gauntlet(scene)];
+        const summonManager = new SymbolManager(scene);
+
+        // --- Particles ---
+        const particleCount = 1500; 
+        const posArray = new Float32Array(particleCount * 3);
+        const pGeo = new THREE.BufferGeometry();
+        for(let i=0; i<particleCount*3; i++) posArray[i] = (Math.random()-0.5)*50;
+        pGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const pMat = new THREE.PointsMaterial({
+            size: 0.1, color: config.coreColor, transparent: true, opacity: 0.6
+        });
+        const particles = new THREE.Points(pGeo, pMat);
+        scene.add(particles);
+
+
+        // --- MediaPipe Logic ---
+        const videoElement = document.getElementById('video-feed');
+        const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
+        
+        hands.setOptions({
+            maxNumHands: 2, 
+            modelComplexity: 1,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5
+        });
+
+        hands.onResults(onResults);
+
+        const cameraUtils = new Camera(videoElement, {
+            onFrame: async () => { await hands.send({image: videoElement}); },
+            width: 1280, height: 720
+        });
+        
+        // Start System Trigger
+        window.enterSystem = () => {
+            const screen = document.getElementById('start-screen');
+            screen.style.opacity = 0;
+            setTimeout(() => {
+                screen.remove();
+                cameraUtils.start()
+                .then(() => {
+                    document.getElementById('loader').style.opacity = 0;
+                    setTimeout(()=> document.getElementById('loader').remove(), 500);
+                })
+                .catch(err => {
+                    console.error("Camera failed: ", err);
+                    alert("CAMERA ERROR: " + err.message + "\nPlease ensure camera permissions are granted.");
+                });
+            }, 800);
+        };
+
+        // --- Logic & Gestures ---
+        
+        let lastGestureTime = 0;
+        const GESTURE_COOLDOWN = 1000; // Increased cooldown to 1s to prevent spam
+
+        function detectGestures(vectors) {
+            // vectors: array of 21 Vector3s for one hand
+            const thumbTip = vectors[4];
+            const indexTip = vectors[8];
+            const middleTip = vectors[12];
+            const pinkyTip = vectors[20];
+            
+            const thumbIndexDist = thumbTip.distanceTo(indexTip);
+            const thumbMiddleDist = thumbTip.distanceTo(middleTip);
+            const thumbPinkyDist = thumbTip.distanceTo(pinkyTip);
+
+            // 1. Check Thumb + Index (Cycle)
+            // CONDITION: Thumb close to Index, but Middle Finger is FAR (prevent fist trigger)
+            if (thumbIndexDist < 1.2 && thumbMiddleDist > 2.0) { 
+                return 'cycle';
+            }
+            
+            // 2. Check Thumb + Middle (Toggle)
+            // CONDITION: Thumb close to Middle, but Index Finger is FAR
+            if (thumbMiddleDist < 1.2 && thumbIndexDist > 2.0) {
+                return 'toggle';
+            }
+
+            // 3. Check Thumb + Pinky (Solo Lock / Hide Hands)
+            // CONDITION: Thumb close to Pinky, other fingers away
+            if (thumbPinkyDist < 1.5 && thumbIndexDist > 2.0) {
+                return 'lock';
+            }
+            
+            return null;
+        }
+
+        function calculateTension(vectors) {
+            const dist = vectors[0].distanceTo(vectors[12]);
+            let val = (dist - 3) / 7;
+            if (val < 0) val = 0;
+            if (val > 1) val = 1;
+            return val;
+        }
+
+        function updateSummoningUI(name, status) {
+            document.getElementById('summon-name').innerText = name;
+            const statusEl = document.getElementById('summon-status');
+            statusEl.innerText = status ? "ACTIVE" : "STANDBY";
+            statusEl.style.color = status ? "#0f0" : "#666";
+        }
+
+        function onResults(results) {
+            const handCount = results.multiHandLandmarks ? results.multiHandLandmarks.length : 0;
+            document.getElementById('hand-count').innerText = handCount;
+
+            const activeHandsData = [];
+            const now = Date.now();
+
+            gauntlets.forEach(g => g.setVisible(false));
+
+            if (handCount > 0) {
+                for (let i = 0; i < handCount; i++) {
+                    if (i >= 2) break;
+
+                    const lm = results.multiHandLandmarks[i];
+                    const g = gauntlets[i];
+                    
+                    // Always update vectors for gesture detection
+                    const vectors = g.update(lm);
+                    
+                    // Visibility Logic: Hide gauntlets if Solo Mode is active
+                    if (summonManager.soloMode) {
+                        g.setVisible(false);
+                    } else {
+                        g.setVisible(true);
+                    }
+                    
+                    activeHandsData.push({
+                        pos: g.palmPosition.clone(),
+                        normal: g.palmNormal.clone()
+                    });
+
+                    const tension = calculateTension(vectors); 
+                    g.repulsorLight.intensity = tension * 5; 
+                    
+                    const prefix = (i === 0) ? 'l' : 'r';
+                    const charge = Math.round(tension * 100);
+                    document.getElementById(`charge-bar-${prefix}`).style.width = charge + "%";
+                    document.getElementById(`tension-val-${prefix}`).innerText = charge + "%";
+
+                    // Gesture Check (One action per frame limit logic)
+                    if (now - lastGestureTime > GESTURE_COOLDOWN) {
+                        const gesture = detectGestures(vectors);
+                        if (gesture === 'cycle') {
+                            const newName = summonManager.cycleSymbol();
+                            lastGestureTime = now;
+                        } else if (gesture === 'toggle') {
+                            const isActive = summonManager.toggleMode();
+                            updateSummoningUI(summonManager.names[summonManager.currentIndex], isActive);
+                            lastGestureTime = now;
+                        } else if (gesture === 'lock') {
+                            summonManager.toggleSoloMode();
+                            lastGestureTime = now;
+                        }
+                    }
+                }
+                
+                // Update Summoned Object Position
+                if (summonManager.active) {
+                    if (summonManager.soloMode) {
+                        // SOLO MODE: Keep at last valid position, ignore hand movement for position (LOCK)
+                        // Hands are hidden, so we just render symbol at stored location
+                        summonManager.update(summonManager.lastValidPosition, null);
+                        summonManager.group.visible = true;
+                    } 
+                    else if (activeHandsData.length === 2) {
+                        // Two Hands: Calculate Midpoint and Distance for Scaling
+                        const p1 = activeHandsData[0].pos;
+                        const p2 = activeHandsData[1].pos;
+                        const mid = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
+                        const dist = p1.distanceTo(p2);
+                        
+                        // Update persistent position cache
+                        summonManager.lastValidPosition.copy(mid);
+                        
+                        // Pass valid distance to update scale
+                        summonManager.update(mid, dist);
+                        summonManager.group.visible = true;
+                        
+                    } else if (activeHandsData.length === 1) {
+                        // Single Hand: Float in front logic
+                        const hand = activeHandsData[0];
+                        const floatPos = hand.pos.clone();
+                        
+                        // Calculate direction to camera
+                        const cameraDir = new THREE.Vector3().subVectors(camera.position, hand.pos).normalize();
+                        
+                        // Flip normal if needed
+                        if (hand.normal.dot(cameraDir) < 0) {
+                             hand.normal.negate();
+                        }
+                        
+                        // Move units along the (corrected) palm normal
+                        floatPos.add(hand.normal.multiplyScalar(4.0));
+                        
+                        // Update persistent position cache
+                        summonManager.lastValidPosition.copy(floatPos);
+                        
+                        // Pass null distance to keep persistent scale
+                        summonManager.update(floatPos, null); 
+                        summonManager.group.visible = true;
+                    }
+                } else {
+                    summonManager.group.visible = false;
+                }
+
+            } else {
+                document.getElementById('charge-bar-l').style.width = "0%";
+                document.getElementById('tension-val-l').innerText = "0%";
+                document.getElementById('charge-bar-r').style.width = "0%";
+                document.getElementById('tension-val-r').innerText = "0%";
+                
+                // Handle Persistence when no hands found (global check)
+                if (summonManager.active && summonManager.soloMode) {
+                    summonManager.update(summonManager.lastValidPosition, null);
+                    summonManager.group.visible = true;
+                } else {
+                    summonManager.group.visible = false;
+                }
+            }
+        }
+
+        // --- Loop ---
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+
+            // Particles
+            const pos = particles.geometry.attributes.position.array;
+            const time = Date.now() * 0.001;
+            for(let i=0; i<particleCount*3; i+=3) {
+                pos[i+1] += Math.sin(time + pos[i])*0.02; 
+            }
+            particles.geometry.attributes.position.needsUpdate = true;
+
+            composer.render();
+        }
+
+        // --- Inputs ---
+        document.getElementById('primary-color').addEventListener('input', (e) => {
+            armorMat.color.set(e.target.value);
+        });
+        document.getElementById('core-color').addEventListener('input', (e) => {
+            coreMat.color.set(e.target.value);
+            coreMat.emissive.set(e.target.value);
+            pMat.color.set(e.target.value);
+            gauntlets.forEach(g => g.repulsorLight.color.set(e.target.value));
+        });
+
+        window.toggleWireframe = () => {
+            armorMat.wireframe = !armorMat.wireframe;
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        animate();
+    </script>
+</body>
+</html>
